@@ -19,7 +19,6 @@ import ConsumablesPage from './features/consumables/pages/ConsumablesPage'
 import CategoriesPage from './features/categories/pages/CategoriesPage'
 import CategoryFieldsPage from './features/categories/pages/CategoryFieldsPage'
 import ReportsPage from './features/reports/pages/ReportsPage'
-import SettingsPage from './features/settings/pages/SettingsPage'
 
 const App = () => {
   return (
@@ -42,7 +41,6 @@ const App = () => {
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/categories/:id/fields" element={<CategoryFieldsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
           </Route>
 
           {/* Catch all */}

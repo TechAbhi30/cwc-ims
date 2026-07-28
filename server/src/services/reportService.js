@@ -1,4 +1,4 @@
-const reportRepository = require('../repositories/reportRepository');
+const reportRepository = require("../repositories/reportRepository");
 
 /**
  * Report Service
@@ -9,9 +9,14 @@ const getEmployeeAssets = async () => reportRepository.getEmployeeAssets();
 
 const getCategoryAssets = async () => reportRepository.getCategoryAssets();
 
-const getAssetStatusReport = async (filters) => reportRepository.getAssetStatusReport(filters);
+const getAssetStatusReport = async (filters) =>
+  reportRepository.getAssetStatusReport(filters);
 
-const getAssignmentHistory = async (filters) => reportRepository.getAssignmentHistory(filters);
+const getAssetStatusFieldDefinitions = async (categoryIds) =>
+  reportRepository.getAssetStatusFieldDefinitions(categoryIds);
+
+const getAssignmentHistory = async (filters) =>
+  reportRepository.getAssignmentHistory(filters);
 
 const getConsumableStock = async () => reportRepository.getConsumableStock();
 
@@ -24,6 +29,7 @@ module.exports = {
   getEmployeeAssets,
   getCategoryAssets,
   getAssetStatusReport,
+  getAssetStatusFieldDefinitions,
   getAssignmentHistory,
   getConsumableStock,
   getBulkInventoryTransactions,

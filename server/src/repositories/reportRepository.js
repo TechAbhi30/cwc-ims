@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { query } = require("../config/database");
 
 /**
  * Report Repository
@@ -90,7 +90,8 @@ const getAssetStatusReport = async ({ category_id, status } = {}) => {
     conditions.push(`a.status = $${params.length}`);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const result = await query(
     `SELECT
@@ -110,6 +111,34 @@ const getAssetStatusReport = async ({ category_id, status } = {}) => {
 };
 
 /**
+ * Get custom field metadata for the categories included in the asset status report
+ * @param {string[]} categoryIds
+ * @returns {Object[]}
+ */
+const getAssetStatusFieldDefinitions = async (categoryIds = []) => {
+  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+    return [];
+  }
+
+  const result = await query(
+    `SELECT
+      c.id AS category_id,
+      c.name AS category_name,
+      cf.field_name,
+      cf.field_label,
+      cf.field_type,
+      cf.sort_order
+     FROM categories c
+     JOIN category_fields cf ON cf.category_id = c.id
+     WHERE c.id = ANY($1::INT[])
+     ORDER BY c.name ASC, cf.sort_order ASC, cf.field_label ASC`,
+    [categoryIds]
+  );
+
+  return result.rows;
+};
+
+/**
  * Get assignment history with optional date/employee filters
  * @param {Object} params
  * @param {string} [params.from_date]
@@ -117,7 +146,11 @@ const getAssetStatusReport = async ({ category_id, status } = {}) => {
  * @param {string} [params.employee_id]
  * @returns {Object[]}
  */
-const getAssignmentHistory = async ({ from_date, to_date, employee_id } = {}) => {
+const getAssignmentHistory = async ({
+  from_date,
+  to_date,
+  employee_id,
+} = {}) => {
   const conditions = [];
   const params = [];
 
@@ -136,7 +169,8 @@ const getAssignmentHistory = async ({ from_date, to_date, employee_id } = {}) =>
     conditions.push(`a.employee_id = $${params.length}`);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const result = await query(
     `SELECT
@@ -196,7 +230,12 @@ const getConsumableStock = async () => {
  * @param {string} [params.consumable_id]
  * @returns {Object[]}
  */
-const getBulkInventoryTransactions = async ({ from_date, to_date, transaction_type, consumable_id } = {}) => {
+const getBulkInventoryTransactions = async ({
+  from_date,
+  to_date,
+  transaction_type,
+  consumable_id,
+} = {}) => {
   const conditions = [];
   const params = [];
 
@@ -220,7 +259,8 @@ const getBulkInventoryTransactions = async ({ from_date, to_date, transaction_ty
     conditions.push(`st.consumable_id = $${params.length}`);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const result = await query(
     `SELECT
@@ -275,6 +315,7 @@ module.exports = {
   getEmployeeAssets,
   getCategoryAssets,
   getAssetStatusReport,
+  getAssetStatusFieldDefinitions,
   getAssignmentHistory,
   getConsumableStock,
   getBulkInventoryTransactions,
