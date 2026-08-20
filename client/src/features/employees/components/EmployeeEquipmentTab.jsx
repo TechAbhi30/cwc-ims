@@ -12,6 +12,7 @@ import Textarea from "../../../components/ui/Textarea";
 import Badge from "../../../components/ui/Badge";
 import EmptyState from "../../../components/ui/EmptyState";
 import { Spinner } from "../../../components/ui/Loader";
+import AssetEditModal from "../../assets/components/AssetEditModal";
 import { formatDate, getDaysActive } from "../../../utils/formatters";
 import { useToast } from "../../../store/ToastContext";
 
@@ -51,7 +52,13 @@ const labelFor = (key, meta) =>
   key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
 // ─── Asset Row ─────────────────────────────────────────────────
-const AssetAssignmentRow = ({ assignment, expanded, onToggle, onReturn }) => {
+const AssetAssignmentRow = ({
+  assignment,
+  expanded,
+  onToggle,
+  onReturn,
+  onEdit,
+}) => {
   const { data: detail, isLoading: detailLoading } = useQuery({
     queryKey: ["asset", assignment.asset_id],
     queryFn: () =>
@@ -104,16 +111,29 @@ const AssetAssignmentRow = ({ assignment, expanded, onToggle, onReturn }) => {
               .join(" · ")}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onReturn(assignment);
-          }}
-        >
-          Return
-        </Button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            variant="ghost"
+            size="xs"
+            title="Edit this asset's details"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(assignment);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="secondary"
+            size="xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReturn(assignment);
+            }}
+          >
+            Return
+          </Button>
+        </div>
       </button>
 
       {expanded && (
@@ -601,6 +621,7 @@ const EmployeeEquipmentTab = ({ employee }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [assetReturn, setAssetReturn] = useState(null);
   const [consumableReturn, setConsumableReturn] = useState(null);
+  const [editAssetId, setEditAssetId] = useState(null);
 
   const { data: assetAssignments, isLoading: assetsLoading } = useQuery({
     queryKey: ["employee-assignments", employee?.id],
@@ -685,6 +706,7 @@ const EmployeeEquipmentTab = ({ employee }) => {
                 expanded={expandedId === `asset-${a.id}`}
                 onToggle={() => toggle(`asset-${a.id}`)}
                 onReturn={setAssetReturn}
+                onEdit={(assignment) => setEditAssetId(assignment.asset_id)}
               />
             ))}
           </div>
@@ -732,6 +754,14 @@ const EmployeeEquipmentTab = ({ employee }) => {
           </div>
         </div>
       )}
+
+      {/* Edit the underlying asset (fill in a missing serial number, etc.)
+          without leaving the employee drawer. */}
+      <AssetEditModal
+        isOpen={!!editAssetId}
+        onClose={() => setEditAssetId(null)}
+        assetId={editAssetId}
+      />
 
       <AssetReturnModal
         isOpen={!!assetReturn}

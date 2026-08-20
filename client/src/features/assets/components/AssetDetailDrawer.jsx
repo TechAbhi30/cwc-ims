@@ -11,7 +11,8 @@ import Select from '../../../components/ui/Select'
 import ConfirmDialog from '../../../components/ui/ConfirmDialog'
 import { Spinner } from '../../../components/ui/Loader'
 import { formatDate } from '../../../utils/formatters'
-import AssetForm from './AssetForm'
+import AssetEditModal from './AssetEditModal'
+import { invalidateAssetCaches } from '../assetCache'
 import { useToast } from '../../../store/ToastContext'
 
 const InfoRow = ({ label, value }) => (
@@ -54,23 +55,10 @@ const AssetDetailDrawer = ({ asset, isOpen, onClose, onUpdated }) => {
     enabled: isOpen && !!detail?.category_id,
   })
 
-  const updateMutation = useMutation({
-    mutationFn: (data) => assetApi.update(detail.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
-      queryClient.invalidateQueries({ queryKey: ['asset', detail?.id] })
-      setEditOpen(false)
-      onUpdated?.()
-      toast.success('Asset updated successfully')
-    },
-    onError: (err) => toast.error(err.response?.data?.message || 'Failed to update asset'),
-  })
-
   const statusMutation = useMutation({
     mutationFn: (status) => assetApi.updateStatus(detail.id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
-      queryClient.invalidateQueries({ queryKey: ['asset', detail?.id] })
+      invalidateAssetCaches(queryClient)
       setStatusOpen(false)
       setNewStatus('')
       onUpdated?.()
@@ -81,8 +69,10 @@ const AssetDetailDrawer = ({ asset, isOpen, onClose, onUpdated }) => {
   const deleteMutation = useMutation({
     mutationFn: () => assetApi.delete(detail.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      // Drop the detail cache entry outright — the record no longer exists,
+      // so a refetch would only 404.
+      queryClient.removeQueries({ queryKey: ['asset', detail?.id] })
+      invalidateAssetCaches(queryClient)
       setDeleteOpen(false)
       onUpdated?.()
       onClose()
@@ -275,44 +265,12 @@ const AssetDetailDrawer = ({ asset, isOpen, onClose, onUpdated }) => {
       </Drawer>
 
       {/* ─── Edit Modal ─────────────────────────────────────────── */}
-      <Modal
+      <AssetEditModal
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
-        title="Edit Asset"
-        size="lg"
-        footer={
-          <>
-            <button onClick={() => setEditOpen(false)} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
-            <button
-              form="asset-edit-form"
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 transition-colors"
-            >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-          </>
-        }
-      >
-        <AssetForm
-          formId="asset-edit-form"
-          isEdit
-          defaultValues={{
-            category_id: String(detail?.category_id || ''),
-            product_name: detail?.product_name || '',
-            model: detail?.model || '',
-            serial_number: detail?.serial_number || '',
-            asset_number: detail?.asset_number || '',
-            purchase_date: detail?.purchase_date?.split('T')[0] || '',
-            warranty_expiry: detail?.warranty_expiry?.split('T')[0] || '',
-            remarks: detail?.remarks || '',
-            custom_fields: detail?.custom_fields || {},
-          }}
-          onSubmit={(data) => {
-            updateMutation.mutate(data)
-          }}
-        />
-      </Modal>
+        assetId={detail?.id}
+        onUpdated={onUpdated}
+      />
 
       {/* ─── Change Status Modal ─────────────────────────────────── */}
       <Modal

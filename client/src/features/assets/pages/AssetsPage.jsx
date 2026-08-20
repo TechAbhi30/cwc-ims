@@ -12,6 +12,7 @@ import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
 import AssetDetailDrawer from '../components/AssetDetailDrawer'
 import AssetForm from '../components/AssetForm'
+import { invalidateAssetCaches } from '../assetCache'
 import { useToast } from '../../../store/ToastContext'
 import { formatDate } from '../../../utils/formatters'
 import useDisclosure from '../../../hooks/useDisclosure'
@@ -112,8 +113,7 @@ const AssetsPage = () => {
     mutationFn: (formData) => assetApi.create(formData),
     onSuccess: () => {
       toast.success('Asset created successfully')
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      invalidateAssetCaches(queryClient)
       createModal.close()
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to create asset'),
